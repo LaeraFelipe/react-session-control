@@ -1,9 +1,10 @@
 {
-  "name": "session-controlera",
-  "version": "1.0.0",
+  "name": "react-session-control",
+  "version": "1.0.2",
   "description": "Component to provide session control. It controls how long the user can be inactive and observes the storage checking for token existence.",
-  "main": "./dist/index.js",
-  "scripts": {
+  "main": "dist/index.js",
+    "scripts": {
+    "prepublish": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "peerDependencies": {

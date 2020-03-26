@@ -1,19 +1,19 @@
 import React, { PureComponent } from 'react';
 import { debounce, throttle } from './utils';
-import './SessionControl.css';
+import '../SessionControl.css';
 
 interface SectionControlProps {
   /**Inictivity timeout in seconds. */
-  inactivityTimeout?: number,
+  inactivityTimeout: number,
   /**Inictivity timeout when modal is open in seconds. */
-  modalInactivityTimeout?: number,
-  /**Called on modal inactivity or logout button click. */
+  modalInactivityTimeout: number,
+  /**Title to display in modal header */
   title?: string,
-  /**Message do display in modal. */
+  /**Message to display in modal. */
   message?: string,
-  /**Timer message. */
+  /**Message to display before time count in modal. */
   timerMessage?: string,
-  /**Confirmation modal button text. */
+  /**Text to display in continue button. */
   continueButtonText?: string,
   /**Logout modal button text. */
   logoutButtonText?: string,
@@ -21,10 +21,10 @@ interface SectionControlProps {
   showDocumentTitleAlert?: boolean,
   /**The text displayed as document title case showDocumentTitleAlert is true. */
   documentTitleAlertText?: string,
-  /**Key do look existence in local storage. */
+  /**Key do check existence in local storage. */
   storageTokenKey?: string,
   /**Callback to be called when timer ends or logout click. */
-  onLogout?: (logoutType: LogoutTypes) => void,
+  onLogout: (logoutType: LogoutTypes) => void,
 }
 
 interface State {
@@ -41,9 +41,7 @@ export enum LogoutTypes {
 
 export default class SessionControl extends PureComponent<SectionControlProps, State> {
   static defaultProps: SectionControlProps = {
-    inactivityTimeout: 5,
     alertDocumentTitle: true,
-    modalInactivityTimeout: 10,
     title: 'Inactivity alert',
     message: 'You have been inactive for a long time. Do you want to remain logged in?',
     continueButtonText: 'Continue',
@@ -147,8 +145,12 @@ export default class SessionControl extends PureComponent<SectionControlProps, S
       }
       clearInterval(this.inactivityTimeoutRef);
       clearInterval(this.modalTimerIntervalRef);
-      
+
       this.modalElement.modal('hide');
+      this.setState({ isModalOpen: false }, () => {
+        this.handleUserActivity();
+      });
+      
       onLogout && onLogout(LogoutTypes.inactivity);
     } else {
       if (showDocumentTitleAlert) {
@@ -166,7 +168,7 @@ export default class SessionControl extends PureComponent<SectionControlProps, S
   handleStorageChange(event: any) {
     const { storageTokenKey } = this.props;
 
-    if (event.key === storageTokenKey) {
+    if (event.key === storageTokenKey || event.key === null) {
       this.handleStorageKeyChange(event);
     }
   }
