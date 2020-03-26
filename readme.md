@@ -41,6 +41,11 @@ import { SessionControl, LogoutTypes } from  'react-session-control';
 
 //Should render after authentication.
 export function Layout(){
+
+	function handleSessionControlLogout(logoutType){
+		//Do yout logout logic here...
+	}
+
 	return ( 
 		<>
 		<SessionControl
