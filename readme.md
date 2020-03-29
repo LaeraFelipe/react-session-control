@@ -42,7 +42,7 @@ npm install --save react-session-control
 
 ### Using
 
-Basicaly the lib use two componentes: 
+Basicaly the lib provide two componentes: 
 
 #### UnauthenticatedSessionControl
 Component to put in your unauthenticated area in your app to warn you when token is set by other tabs.
