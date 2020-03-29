@@ -10,22 +10,22 @@ React Session Control is a lib to provide session control to your application. I
 ### Inactivity time
 Using the component AuthenticatedSessionControl you can set maximum time to user stay inactivity and use a callback to do some action after this time. The inactivity time is calculated using all tabs.
 
-<div style="text-align: center">
+<p align="center">
 	<img src="gifs/inactivity.gif" />
-</div>
+</p>
 
 ### Sync tabs
-Using the component AuhtneticatedSessionControl you can syncronize authentication status between tabs. When one tab disconects or conects the other one follows the action.
+Using the component AuthenticatedSessionControl and UnauthenticatedSessionControl you can syncronize authentication status between tabs. When one tab disconects or conects the other one follows the action.
 
-<div style="text-align: center">
+<p align="center">
 	<img src="gifs/tab-sync.gif" />
-</div>
+</p>
 
 If the inactivity modal is open on one or more tabs and one of them is activated, only it will continue with the modal.
 
-<div style="text-align: center">
+<p align="center">
 	<img src="gifs/modal-sync.gif" />
-</div>
+</p>
 
 ## Getting started
 
