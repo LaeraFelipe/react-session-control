@@ -3,41 +3,80 @@
 
 # React Session Control
 
-React Session Control is a component to provide session control to your application. It can help you to manage the inactivity time and token existence.
+React Session Control is a lib to provide session control to your application. It can help you to manage the inactivity time and token existence.
 
-![](gifs/inactivity.gif)
-![](gifs/button.gif)
-![](gifs/lostToken.gif)
+## Features
+
+### Inactivity time
+Using the component AuthenticatedSessionControl you can set maximum time to user stay inactivity and use a callback to do some action after this time. The inactivity time is calculated using all tabs.
+
+<div style="text-align: center">
+	<img src="gifs/inactivity.gif" />
+</div>
+
+### Sync tabs
+Using the component AuhtneticatedSessionControl you can syncronize authentication status between tabs. When one tab disconects or conects the other one follows the action.
+
+<div style="text-align: center">
+	<img src="gifs/tab-sync.gif" />
+</div>
+
+If the inactivity modal is open on one or more tabs and one of them is activated, only it will continue with the modal.
+
+<div style="text-align: center">
+	<img src="gifs/modal-sync.gif" />
+</div>
 
 ## Getting started
 
 ### Prerequisites
 
-  
-
-Your application must have both bootstrap(^4.0.0) and jquery(^3.0.0).
-
-  
+Before, to use it was necessary to have the bootstrap (^ 4.0.0) and jquery (^ 3.0.0) packages as dependencies. But now all the functionality is builded internally, using no more external libraries.
 
 ### Installing
 
-  
-
 ```
-
 npm install --save react-session-control
 
 ```
 
-  
-
 ### Using
 
-To use you only need to import and put on your app. The only thing to check is if the component is in an area where the application is already authenticated.
+Basicaly the lib use two componentes: 
 
+#### UnauthenticatedSessioControl
+Component to put in your unauthenticated area in your app to warn you when token is set by other tabs.
 
 ```js
-import { SessionControl, LogoutTypes } from  'react-session-control';
+import { UnauthenticatedSessionControl } from  'react-session-control';
+
+//Should render after authentication.
+export function Login(){
+	function handleOtherTabsLogin(logoutType){
+		//Do your logic here...
+	
+	}
+	return ( 
+		<>
+		<UnauthenticatedSessionControl
+			storageTokenKey="token"
+			onLogin={handleSessionControlLogout}
+		/>
+		//your code... 
+		</>	
+	)
+}
+```
+##### Props
+
+#### storageToken 
+Key do check existence in local storage. If you dont pass this config the component will not check storage. **Required**
+
+#### AuthenticatedSessioControl
+Component to put in a authenticated area in your app to warn you when the inacitivity time is over, the user click in logout inside modal or if the token has been removed by other tabs.
+
+```js
+import { AuthenticatedSessioControl, LogoutTypes } from  'react-session-control';
 
 //Should render after authentication.
 export function Layout(){
@@ -60,7 +99,7 @@ export function Layout(){
 }
 ```
   
-### Props
+##### Props
 
 #### inactivityTimeout
 Inictivity timeout in seconds. **Required**
@@ -95,16 +134,10 @@ The text displayed as document title case showDocumentTitleAlert is true.
 
 ## Authors
 
-  
-
-*  **Felipe Laera** - *Software Engineer*
-
-  
+*  **Felipe Laera** - *Software Engineer*  
 
 See also the list of [contributors](https://github.com/LaeraFelipe/react-session-control/contributors) who participated in this project.
 
 ## License
-
-  
 
 This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/LaeraFelipe/react-session-control/blob/master/LICENSE.md) file for details

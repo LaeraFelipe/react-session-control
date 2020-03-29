@@ -1,3 +1,4 @@
-import SessionControl, { LogoutTypes } from "./SessionControl";
+import UnauthenticatedSessionControl from "./UnauthenticatedSessionControl";
+import AuthenticatedSessionControl, { LogoutTypes } from "./AuthenticatedSessionControl";
 
-export { SessionControl, LogoutTypes };
+export { UnauthenticatedSessionControl, AuthenticatedSessionControl, LogoutTypes };
