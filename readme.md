@@ -31,7 +31,7 @@ If the inactivity modal is open on one or more tabs and one of them is activated
 
 ### Prerequisites
 
-Before, to use it was necessary to have the bootstrap (^ 4.0.0) and jquery (^ 3.0.0) packages as dependencies. But now all the functionality is builded internally, using no more external libraries.
+Just install and use!
 
 ### Installing
 
@@ -44,7 +44,7 @@ npm install --save react-session-control
 
 Basicaly the lib use two componentes: 
 
-#### UnauthenticatedSessioControl
+#### UnauthenticatedSessionControl
 Component to put in your unauthenticated area in your app to warn you when token is set by other tabs.
 
 ```js
@@ -72,11 +72,11 @@ export function Login(){
 #### storageToken 
 Key do check existence in local storage. If you dont pass this config the component will not check storage. **Required**
 
-#### AuthenticatedSessioControl
+#### AuthenticatedSessionControl
 Component to put in a authenticated area in your app to warn you when the inacitivity time is over, the user click in logout inside modal or if the token has been removed by other tabs.
 
 ```js
-import { AuthenticatedSessioControl, LogoutTypes } from  'react-session-control';
+import { AuthenticatedSessionControl, LogoutTypes } from  'react-session-control';
 
 //Should render after authentication.
 export function Layout(){
@@ -87,7 +87,7 @@ export function Layout(){
 
 	return ( 
 		<>
-		<SessionControl
+		<AuthenticatedSessionControl
 			inactivityTimeout={900}
 			modalInactivityTimeout={30}
 			storageTokenKey="token"
