@@ -52,7 +52,7 @@ import { UnauthenticatedSessionControl } from  'react-session-control';
 
 //Should render after authentication.
 export function Login(){
-	function handleOtherTabsLogin(logoutType){
+	function handleSessionControlLogin(logoutType){
 		//Do your logic here...
 	
 	}
@@ -60,7 +60,7 @@ export function Login(){
 		<>
 		<UnauthenticatedSessionControl
 			storageTokenKey="token"
-			onLogin={handleSessionControlLogout}
+			onLogin={handleSessionControlLogin}
 		/>
 		//your code... 
 		</>	
