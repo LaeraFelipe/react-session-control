@@ -214,12 +214,12 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
   }
 
   handleStorageKeyChange(event: any) {
-    const { debug } = this.props;
+    const { debug, storageTokenKey } = this.props;
     const { newValue } = event;
 
     if (debug) console.log('REACT-SESSION-CONTROL|TOKEN-CHANGE-EVENT:', event);
 
-    if (newValue == null) {
+    if (newValue == null && localStorage.getItem(storageTokenKey) == null) {
       this.logout(LogoutTypes.lostToken)
     }
   }
