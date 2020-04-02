@@ -27,7 +27,11 @@ interface AuthenticatedSectionControlProps {
   /**If should display document title alert. */
   showDocumentTitleAlert?: boolean,
   /**The text displayed as document title case showDocumentTitleAlert is true. */
-  documentTitleAlertText?: string
+  documentTitleAlertText?: string,
+  /**The time in miliseconds to debounce token changes.  */
+  tokenChangeDebounceTime?: number,
+  /**The time in miliseconds to throttle user activity. */
+  userActivityThrottleTime?: number,
 }
 
 export enum LogoutTypes {
@@ -50,6 +54,8 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
     logoutButtonText: 'Logout',
     timerMessage: 'You will be disconnected in: ',
     documentTitleAlertText: 'INACTIVITY ALERT',
+    tokenChangeDebounceTime: 500,
+    userActivityThrottleTime: 500,
   };
 
   originalDocumentTitle: string = null;
@@ -61,7 +67,7 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
   constructor(props: AuthenticatedSectionControlProps) {
     super(props);
 
-    const { modalInactivityTimeout } = props;
+    const { modalInactivityTimeout, userActivityThrottleTime, tokenChangeDebounceTime } = props;
 
     this.state = {
       isModalOpen: false,
@@ -75,8 +81,8 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
     this.handleStorageChange = this.handleStorageChange.bind(this);
     this.handleStorageKeyChange = this.handleStorageKeyChange.bind(this);
 
-    this.throttledHandleUserActivity = throttle(this.handleUserActivity.bind(this, true), 500);
-    this.debouncedHandleStorageKeyChange = debounce(this.handleStorageKeyChange, 500);
+    this.throttledHandleUserActivity = throttle(this.handleUserActivity.bind(this, true), userActivityThrottleTime);
+    this.debouncedHandleStorageKeyChange = debounce(this.handleStorageKeyChange, tokenChangeDebounceTime);
 
     this.originalDocumentTitle = document.title;
   }

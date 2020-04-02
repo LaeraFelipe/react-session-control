@@ -131,6 +131,13 @@ If should display document title alert.
 #### documentTitleAlertText
 The text displayed as document title case showDocumentTitleAlert is true.
 **default**: ```'INACTIVITY ALERT'```
+#### tokenChangeDebounceTime
+The time in miliseconds to debounce token changes.
+**default**: 500
+#### userActivityThrottleTime
+The time in miliseconds to throttle user activity.
+**default**: 500
+
 
 ## Authors
 
