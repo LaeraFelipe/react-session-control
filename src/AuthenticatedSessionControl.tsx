@@ -32,6 +32,8 @@ interface AuthenticatedSectionControlProps {
   tokenChangeDebounceTime?: number,
   /**The time in miliseconds to throttle user activity. */
   userActivityThrottleTime?: number,
+  /**Debug mode. */
+  debug?: boolean,
 }
 
 export enum LogoutTypes {
@@ -56,6 +58,7 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
     documentTitleAlertText: 'INACTIVITY ALERT',
     tokenChangeDebounceTime: 500,
     userActivityThrottleTime: 500,
+    debug: false
   };
 
   originalDocumentTitle: string = null;
@@ -211,7 +214,10 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
   }
 
   handleStorageKeyChange(event: any) {
+    const { debug } = this.props;
     const { newValue } = event;
+
+    if (debug) console.log('REACT-SESSION-CONTROL|TOKEN-CHANGE-EVENT:', event);
 
     if (newValue == null) {
       this.logout(LogoutTypes.lostToken)
