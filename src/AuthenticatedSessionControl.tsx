@@ -1,30 +1,19 @@
-import React, { PureComponent } from 'react';
-import SessionControlModal from './SessionControlModal';
+import React, { PureComponent, ComponentType } from 'react';
+import SessionControlModal, { SessionControlModalProps } from './SessionControlModal';
 import { debounce, throttle } from './utils';
 import '../SessionControl.css';
 
 const LAST_ACITIVTY_TIME_STORAGE_KEY = 'sc-last-activity-time';
+const LOGOUT_CAUSE_STORAGE_KEY = 'sc-logout-cause';
 
-interface AuthenticatedSectionControlProps {
+interface AuthenticatedSectionControlProps extends Omit<SessionControlModalProps, 'remainingTime' | 'isOpen' | 'progressPercent' | 'onLogoutClick' | 'onContinueClick'> {
   /**Inictivity timeout in seconds. */
   inactivityTimeout: number,
   /**Inictivity timeout when modal is open in seconds. */
   modalInactivityTimeout: number,
-  /**Callback to be called when timer ends, logout click or token is removed from local storage. */
-  onLogout?: (logoutType: LogoutTypes) => void,
   /**Key do check existence in local storage. */
   storageTokenKey?: string,
-  /**Title to display in modal header */
-  title?: string,
-  /**Message to display in modal. */
-  message?: string,
-  /**Message to display before time count in modal. */
-  timerMessage?: string,
-  /**Text to display in continue button. */
-  continueButtonText?: string,
-  /**Logout modal button text. */
-  logoutButtonText?: string,
-  /**If should display document title alert. */
+  /**If should warn timeout in document title. */
   showDocumentTitleAlert?: boolean,
   /**The text displayed as document title case showDocumentTitleAlert is true. */
   documentTitleAlertText?: string,
@@ -34,6 +23,14 @@ interface AuthenticatedSectionControlProps {
   userActivityThrottleTime?: number,
   /**Debug mode. */
   debug?: boolean,
+  /**Callback to be called when timer ends, logout click or token is removed from local storage. */
+  onLogout?: (logoutType: LogoutTypes, local?: boolean) => void | Promise<any>,
+  /**Callback to be called when inactivy ends. */
+  onInactivityTimeout?: () => void | Promise<any>,
+  /**Callback to be called when modal inactivy ends. */
+  onInactivityModalTimeout?: () => void | Promise<any>,
+  /**Modal element to render. */
+  renderModal?: ComponentType<SessionControlModalProps>
 }
 
 export enum LogoutTypes {
@@ -61,6 +58,7 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
     debug: false
   };
 
+  _isMounted = true;
   originalDocumentTitle: string = null;
   inactivityTimeoutRef: any = null;
   modalTimerIntervalRef: any = null;
@@ -91,13 +89,27 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
   }
 
   componentDidMount() {
+    this.debug('MOUNTED');
+
     this.initAcitivityListeners();
     this.handleUserActivity();
+
+    //Cleaning the last logout cause registered.
+    localStorage.removeItem(LOGOUT_CAUSE_STORAGE_KEY);
   }
 
   componentWillUnmount() {
+    this._isMounted = false;
     this.removeActivityListeners();
     this.clearRefs();
+    this.debug('UNMOUNTED');
+  }
+
+  debug(description: string) {
+    const { debug } = this.props;
+    if (debug) {
+      console.log('REACT-SESSON-CONTROL-DEBUG: ', description);
+    }
   }
 
   initAcitivityListeners() {
@@ -110,7 +122,6 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
     document.removeEventListener('mousemove', this.throttledHandleUserActivity);
     document.removeEventListener('keypress', this.throttledHandleUserActivity);
     window.removeEventListener('storage', this.handleStorageChange);
-
   }
 
   clearRefs() {
@@ -118,17 +129,37 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
     clearInterval(this.modalTimerIntervalRef);
   }
 
-  logout(logoutType: LogoutTypes) {
-    this.removeActivityListeners();
-    this.clearRefs();
-
-    const { showDocumentTitleAlert, onLogout } = this.props;
+  resetDocumentTitle() {
+    const { showDocumentTitleAlert } = this.props;
 
     if (showDocumentTitleAlert) {
       document.title = this.originalDocumentTitle;
     }
+  }
 
-    this.setState({ isModalOpen: false }, () => onLogout && onLogout(logoutType));
+  logout(logoutType: LogoutTypes, isFromOtherTab = false) {
+    if (!this._isMounted) {
+      return;
+    }
+
+    this.removeActivityListeners();
+    this.clearRefs();
+
+    this.debug(`LOGOUT TYPE: (${logoutType.toUpperCase()}) LOCAL: (${String(!isFromOtherTab)})`);
+
+    if (!isFromOtherTab) {
+      localStorage.setItem(LOGOUT_CAUSE_STORAGE_KEY, logoutType);
+    }
+
+    this.resetDocumentTitle();
+
+    const { onLogout } = this.props;
+
+    this.setState({ isModalOpen: false }, () => {
+      if (onLogout) {
+        onLogout(logoutType, !isFromOtherTab);
+      }
+    });
   }
 
   getProgressWidth() {
@@ -145,25 +176,31 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
       localStorage.setItem(LAST_ACITIVTY_TIME_STORAGE_KEY, Date.now().toString());
     }
 
-    if (isModalOpen) {
-      clearInterval(this.modalTimerIntervalRef);
+    this.clearRefs();
 
+    this.debug('ACTIVITY');
+
+    if (isModalOpen) {
+      this.resetDocumentTitle();
       this.setState({
         modalTimer: modalInactivityTimeout
       }, () => {
         this.modalTimerIntervalRef = setInterval(this.handleModalTimer, 1000)
       });
     } else {
-      clearTimeout(this.inactivityTimeoutRef);
       this.inactivityTimeoutRef = setTimeout(this.handleInactivityTimeout, inactivityTimeout * 1000);
     }
   }
 
   handleInactivityTimeout() {
-    const { inactivityTimeout } = this.props;
+    const { inactivityTimeout, onInactivityTimeout } = this.props;
     const lastActivity = localStorage.getItem(LAST_ACITIVTY_TIME_STORAGE_KEY);
 
     if (!lastActivity || Date.now() >= (Number(lastActivity) + (inactivityTimeout * 1000))) {
+      if (onInactivityTimeout) {
+        onInactivityTimeout();
+      }
+
       this.setState({ isModalOpen: true }, () => {
         this.handleUserActivity();
       })
@@ -173,10 +210,14 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
   }
 
   handleModalTimer() {
-    const { showDocumentTitleAlert, documentTitleAlertText } = this.props;
+    const { showDocumentTitleAlert, documentTitleAlertText, onInactivityModalTimeout } = this.props;
     const { modalTimer } = this.state;
 
     if (modalTimer === 0) {
+      if (onInactivityModalTimeout) {
+        onInactivityModalTimeout();
+      }
+
       this.logout(LogoutTypes.inactivity)
     } else {
       if (showDocumentTitleAlert) {
@@ -191,36 +232,32 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
   }
 
   handleStorageChange(event: any) {
-    const { storageTokenKey, showDocumentTitleAlert } = this.props;
+    const { storageTokenKey } = this.props;
 
-    if (event.key === LAST_ACITIVTY_TIME_STORAGE_KEY) {
-      this.setState({ isModalOpen: false }, () => {
-        clearInterval(this.modalTimerIntervalRef);
-
-        if (showDocumentTitleAlert) {
-          document.title = this.originalDocumentTitle;
-        }
-
-        this.handleUserActivity();
-      })
-    } else {
-      this.handleUserActivity();
-    }
-
+    //Checking if the token has been removed.
     if (storageTokenKey && event.key === storageTokenKey || event.key === null) {
       //Using debounce here to handle multiple changes.
       this.debouncedHandleStorageKeyChange(event);
     }
+
+    //Checking if other tab register activity.
+    if (event.key === LAST_ACITIVTY_TIME_STORAGE_KEY) {
+      this.debug('OTHER TAB ACTIVITY -> CALLING LOCAL ACTIVITY');
+      this.setState({ isModalOpen: false }, () => this.handleUserActivity())
+    }
   }
 
   handleStorageKeyChange(event: any) {
-    const { debug, storageTokenKey } = this.props;
+    const { storageTokenKey } = this.props;
     const { newValue } = event;
 
-    if (debug) console.log('REACT-SESSION-CONTROL|TOKEN-CHANGE-EVENT:', event);
+    const currentTokenValue = localStorage.getItem(storageTokenKey);
 
-    if (newValue == null && localStorage.getItem(storageTokenKey) == null) {
-      this.logout(LogoutTypes.lostToken)
+    if (newValue == null && currentTokenValue == null) {
+      this.debug(`LOST TOKEN - CURRENT VALUE: ${currentTokenValue}`)
+      //Verifying if other table register logout cause.
+      const logoutType = (localStorage.getItem(LOGOUT_CAUSE_STORAGE_KEY) || LogoutTypes.lostToken) as LogoutTypes;
+      this.logout(logoutType, true);
     }
   }
 
@@ -229,25 +266,21 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
   }
 
   handleModalContinueClick() {
-    const { showDocumentTitleAlert } = this.props;
-
     clearInterval(this.modalTimerIntervalRef);
-
-    if (showDocumentTitleAlert) {
-      document.title = this.originalDocumentTitle;
-    }
-
+    this.resetDocumentTitle();
     this.setState({ isModalOpen: false }, () => {
       this.handleUserActivity();
     });
   }
 
   render() {
-    const { title, message, timerMessage, logoutButtonText, continueButtonText } = this.props;
+    const { title, message, timerMessage, logoutButtonText, continueButtonText, renderModal: Modal } = this.props;
     const { modalTimer, isModalOpen } = this.state;
 
+    const ModalComponent = Modal || SessionControlModal;
+
     return (
-      <SessionControlModal
+      <ModalComponent
         isOpen={isModalOpen}
         title={title}
         message={message}

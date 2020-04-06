@@ -8,7 +8,7 @@ React Session Control is a lib to provide session control to your application. I
 ## Features
 
 ### Inactivity time
-Using the component AuthenticatedSessionControl you can set maximum time to user stay inactivity and use a callback to do some action after this time. The inactivity time is calculated using all tabs.
+Using the component AuthenticatedSessionControl you can set the maximum time for the user stay inactive and use a callback to do some action after this time. The inactivity time is calculated using all tabs.
 
 <p align="center">
 	<img src="gifs/inactivity.gif" />
@@ -21,7 +21,7 @@ Using the component AuthenticatedSessionControl and UnauthenticatedSessionContro
 	<img src="gifs/tab-sync.gif" />
 </p>
 
-If the inactivity modal is open on one or more tabs and one of them is activated, only it will continue with the modal.
+If the inactivity modal is open on one or more tabs and if one of them is activated, only it will continue with the modal.
 
 <p align="center">
 	<img src="gifs/modal-sync.gif" />
@@ -71,6 +71,10 @@ export function Login(){
 
 #### storageToken 
 Key do check existence in local storage. If you dont pass this config the component will not check storage. **Required**
+
+#### tokenChangeDebounceTime
+The time in miliseconds to debounce token changes.
+**default**: 500
 
 #### AuthenticatedSessionControl
 Component to put in a authenticated area in your app to warn you when the inacitivity time is over, the user click in logout inside modal or if the token has been removed by other tabs.
@@ -137,7 +141,15 @@ The time in miliseconds to debounce token changes.
 #### userActivityThrottleTime
 The time in miliseconds to throttle user activity.
 **default**: 500
-
+#### debug
+If the component is in debug mode.
+**default**: false
+#### onInactivityTimeout
+Callback to be called when inactivy ends.
+#### onInactivityModalTimeout
+Callback to be called when modal inactivy ends.
+#### renderModal
+Modal element to render.
 
 ## Authors
 

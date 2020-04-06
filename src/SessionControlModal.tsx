@@ -1,16 +1,26 @@
 import React from 'react';
 import '../SessionControlModal.css'
 
-interface SessionControlModalProps {
+export interface SessionControlModalProps {
+  /**If modal is open. */
   isOpen?: boolean,
+  /**Modal title. */
   title?: string,
+  /**Modal message. */
   message?: string,
-  timerMessage?: string
+  /**Timer message. */
+  timerMessage?: string,
+  /**Logout button text. */
   logoutButtonText?: string,
+  /**Continue button text. */
   continueButtonText?: string
+  /**Progress of modal time in percent. */
   progressPercent?: string,
+  /**Remaining time to modal. */
   remainingTime?: number,
+  /**Callback to be called on logout button click. */
   onLogoutClick?: () => void,
+  /**Callback to be called on continue button click. */
   onContinueClick?: () => void
 }
 
