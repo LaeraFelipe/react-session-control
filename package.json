@@ -1,6 +1,6 @@
 {
   "name": "react-session-control",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "Component to provide session control. It controls how long the user can be inactive and observes the storage checking for token existence.",
   "main": "dist/index.js",
   "scripts": {
@@ -20,9 +20,12 @@
   },
   "keywords": [
     "react",
-    "session-control",
-    "storage-events",
-    "bootstrap"
+    "session",
+    "control",
+    "tabs",
+    "storage",
+    "token",
+    "sync"
   ],
   "author": "Felipe Laera Ignacio",
   "license": "MIT",
