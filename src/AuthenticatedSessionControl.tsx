@@ -75,6 +75,7 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
       modalTimer: modalInactivityTimeout,
     }
 
+    this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
     this.handleInactivityTimeout = this.handleInactivityTimeout.bind(this);
     this.handleModalTimer = this.handleModalTimer.bind(this);
     this.handleModalLogoutClick = this.handleModalLogoutClick.bind(this);
@@ -113,12 +114,14 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
   }
 
   initAcitivityListeners() {
+    document.addEventListener('visibilitychange', this.handleVisibilityChange)
     document.addEventListener('mousemove', this.throttledHandleUserActivity);
     document.addEventListener('keypress', this.throttledHandleUserActivity);
     window.addEventListener('storage', this.handleStorageChange);
   }
 
   removeActivityListeners() {
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange)
     document.removeEventListener('mousemove', this.throttledHandleUserActivity);
     document.removeEventListener('keypress', this.throttledHandleUserActivity);
     window.removeEventListener('storage', this.handleStorageChange);
@@ -166,6 +169,22 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
     const { modalInactivityTimeout } = this.props;
     const { modalTimer } = this.state;
     return `${modalTimer / modalInactivityTimeout * 100}%`;
+  }
+
+  handleVisibilityChange() {
+    if (document.visibilityState === 'visible') {
+      const lastActivity = localStorage.getItem(LAST_ACITIVTY_TIME_STORAGE_KEY);
+
+      const { inactivityTimeout, modalInactivityTimeout } = this.props;
+
+      const maximumDowntime = (inactivityTimeout + modalInactivityTimeout) * 1000;
+
+      if ((Date.now() - Number(lastActivity)) > maximumDowntime) {
+        this.logout(LogoutTypes.inactivity);
+      } else {
+        localStorage.setItem(LAST_ACITIVTY_TIME_STORAGE_KEY, Date.now().toString());
+      }
+    }
   }
 
   handleUserActivity(updateLastActivity: boolean = false) {
