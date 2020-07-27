@@ -93,7 +93,7 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
     this.debug('MOUNTED');
 
     this.initAcitivityListeners();
-    this.handleUserActivity();
+    this.handleUserActivity(true);
 
     //Cleaning the last logout cause registered.
     localStorage.removeItem(LOGOUT_CAUSE_STORAGE_KEY);
@@ -179,7 +179,11 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
 
       const maximumDowntime = (inactivityTimeout + modalInactivityTimeout) * 1000;
 
-      if ((Date.now() - Number(lastActivity)) > maximumDowntime) {
+      const inactivityTime = (Date.now() - Number(lastActivity));
+
+      this.debug(`INACTIVITY TIME: (${inactivityTime}) DOWNTIME: (${maximumDowntime})`)
+
+      if (inactivityTime >= maximumDowntime) {
         this.logout(LogoutTypes.inactivity);
       } else {
         localStorage.setItem(LAST_ACITIVTY_TIME_STORAGE_KEY, Date.now().toString());
