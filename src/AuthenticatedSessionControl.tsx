@@ -30,7 +30,9 @@ interface AuthenticatedSectionControlProps extends Omit<SessionControlModalProps
   /**Callback to be called when modal inactivy ends. */
   onInactivityModalTimeout?: () => void | Promise<any>,
   /**Modal element to render. */
-  renderModal?: ComponentType<SessionControlModalProps>
+  renderModal?: ComponentType<SessionControlModalProps>,
+  /**If the component is disabled. */
+  disabled: boolean
 }
 
 export enum LogoutTypes {
@@ -55,6 +57,7 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
     documentTitleAlertText: 'INACTIVITY ALERT',
     tokenChangeDebounceTime: 500,
     userActivityThrottleTime: 500,
+    disabled: false,
     debug: false
   };
 
@@ -91,12 +94,13 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
 
   componentDidMount() {
     this.debug('MOUNTED');
+    this.load();
+  }
 
-    this.initAcitivityListeners();
-    this.handleUserActivity(true);
-
-    //Cleaning the last logout cause registered.
-    localStorage.removeItem(LOGOUT_CAUSE_STORAGE_KEY);
+  componentDidUpdate(prevProps: AuthenticatedSectionControlProps) {
+    if (prevProps.disabled !== this.props.disabled) {
+      this.load();
+    }
   }
 
   componentWillUnmount() {
@@ -104,6 +108,22 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
     this.removeActivityListeners();
     this.clearRefs();
     this.debug('UNMOUNTED');
+  }
+
+  load() {
+    const { disabled } = this.props;
+
+    if (disabled) {
+      this.removeActivityListeners();
+      this.clearRefs();
+      this.setState({ isModalOpen: false });
+    } else {
+      this.initAcitivityListeners();
+      this.handleUserActivity(true);
+    }
+
+    //Cleaning the last logout cause registered.
+    localStorage.removeItem(LOGOUT_CAUSE_STORAGE_KEY);
   }
 
   debug(description: string) {
@@ -154,6 +174,8 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
       localStorage.setItem(LOGOUT_CAUSE_STORAGE_KEY, logoutType);
     }
 
+    localStorage.removeItem(LAST_ACITIVTY_TIME_STORAGE_KEY);
+
     this.resetDocumentTitle();
 
     const { onLogout } = this.props;
@@ -171,29 +193,38 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
     return `${modalTimer / modalInactivityTimeout * 100}%`;
   }
 
+  verifyLastActivityTime() {
+    const lastActivity = localStorage.getItem(LAST_ACITIVTY_TIME_STORAGE_KEY);
+
+    if (lastActivity === null) {
+      return true;
+    }
+
+    const { inactivityTimeout, modalInactivityTimeout } = this.props;
+
+    const maximumDowntime = (inactivityTimeout + modalInactivityTimeout) * 1000;
+
+    const inactivityTime = (Date.now() - Number(lastActivity));
+
+    this.debug(`INACTIVITY TIME: (${inactivityTime}) DOWNTIME: (${maximumDowntime})`)
+
+    return inactivityTime <= maximumDowntime;
+  }
+
   handleVisibilityChange() {
     if (document.visibilityState === 'visible') {
-      const lastActivity = localStorage.getItem(LAST_ACITIVTY_TIME_STORAGE_KEY);
-
-      const { inactivityTimeout, modalInactivityTimeout } = this.props;
-
-      const maximumDowntime = (inactivityTimeout + modalInactivityTimeout) * 1000;
-
-      const inactivityTime = (Date.now() - Number(lastActivity));
-
-      this.debug(`INACTIVITY TIME: (${inactivityTime}) DOWNTIME: (${maximumDowntime})`)
-
-      if (inactivityTime >= maximumDowntime) {
-        this.logout(LogoutTypes.inactivity);
-      } else {
-        localStorage.setItem(LAST_ACITIVTY_TIME_STORAGE_KEY, Date.now().toString());
-      }
+      this.throttledHandleUserActivity(true);
     }
   }
 
   handleUserActivity(updateLastActivity: boolean = false) {
     const { isModalOpen } = this.state;
     const { inactivityTimeout, modalInactivityTimeout } = this.props;
+
+    if (!this.verifyLastActivityTime()) {
+      this.logout(LogoutTypes.inactivity);
+      return;
+    }
 
     if (updateLastActivity) {
       localStorage.setItem(LAST_ACITIVTY_TIME_STORAGE_KEY, Date.now().toString());
@@ -266,7 +297,7 @@ export default class AuthenticatedSessionControl extends PureComponent<Authentic
     //Checking if other tab register activity.
     if (event.key === LAST_ACITIVTY_TIME_STORAGE_KEY) {
       this.debug('OTHER TAB ACTIVITY -> CALLING LOCAL ACTIVITY');
-      this.setState({ isModalOpen: false }, () => this.handleUserActivity())
+      this.setState({ isModalOpen: false }, () => this.handleUserActivity());
     }
   }
 
